@@ -3,8 +3,14 @@ function rollout!(solver::iLQRSolver{T,Q,n}, α) where {T,Q,n}
     Z = solver.Z; Z̄ = solver.Z̄
     K = solver.K; d = solver.d;
 
-    Z̄[1].z = [solver.x0; control(Z[1])]
+    # update x0
+    B0, d0, _x0 = solver.B0, solver.d0, solver.x0
+    n̂, m0 = size(B0)
+    x0 = ([(I-B0*B0') * _x0[1:n̂] + B0 * _x0[n̂+1:end]; _x0[n̂+1:end]] # 0th step dynamics
+            .+ [B0 * d0; d0] .* α) # 0th step controls
 
+    # Start regular roll out
+    Z̄[1].z = [x0; control(Z[1])]
     temp = 0.0
 	δx = solver.S[end].q
 	δu = solver.S[end].r

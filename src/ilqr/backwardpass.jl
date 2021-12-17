@@ -145,10 +145,17 @@ function static_backwardpass!(solver::iLQRSolver{T,QUAD,L,O,n,n̄,m}, grad_only=
 		ΔV += ΔV_
         k -= 1
     end
-
+	
     regularization_update!(solver, :decrease)
-
-    return ΔV
+	
+	# Compute initial condition update
+	B0 = solver.B0
+	n̂, ini = size(B0)
+	Quu = B0'*Sxx[1:n̂,1:n̂]*B0 + B0'*Sxx[1:n̂,n̂+1:end] + Sxx[n̂+1:end,1:n̂]*B0 + Sxx[n̂+1:end,n̂+1:end] + 1. * solver.ρ[1] * I
+	# Quu = Transpose(solver.B0) * Sxx * solver.B0 + 1. * solver.ρ[1] * I
+	Qu  = B0' * Sx[1:n̂] + Sx[n̂+1:end]
+	solver.d0 .= -Quu\Qu
+	return ΔV
 end
 
 function _bp_reg!(Quu_reg::SizedMatrix{m,m}, Qux_reg, Q, fdx, fdu, ρ, ver=:control) where {m}

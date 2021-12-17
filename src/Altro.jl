@@ -49,7 +49,7 @@ using RobotDynamics:
 # types
 export
     ALTROSolver,
-    # iLQRSolver,
+    iLQRSolver,
     # AugmentedLagrangianSolver,
     SolverStats,
     SolverOptions
@@ -59,7 +59,8 @@ export
     benchmark_solve!,
     iterations,
     set_options!,
-    status
+    status,
+    moveforward!
 
 # modules
 export

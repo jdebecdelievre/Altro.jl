@@ -4,7 +4,7 @@ function initialize!(solver::iLQRSolver)
     clear_cache!(solver)
 
     solver.ρ[1] = solver.opts.bp_reg_initial
-    solver.dρ[1] = 0.0
+    solver.dρ[1] = 1.0
 
     # Initial rollout
     rollout!(solver)
@@ -81,6 +81,7 @@ end
 function step!(solver::iLQRSolver{<:Any,<:Any,L}, J, grad_only::Bool=false) where L
     to = solver.stats.to
     init = !solver.opts.reuse_jacobians  # force recalculation if not reusing
+
     @timeit_debug to "diff jac"     TO.state_diff_jacobian!(solver.G, solver.model, solver.Z)
     if !solver.opts.reuse_jacobians || !(L <: RD.LinearModel) || !grad_only
         @timeit_debug to "dynamics jac" TO.dynamics_expansion!(integration(solver), solver.D, solver.model, solver.Z, solver.cache)
@@ -93,7 +94,11 @@ function step!(solver::iLQRSolver{<:Any,<:Any,L}, J, grad_only::Bool=false) wher
 	else
 		ΔV = backwardpass!(solver)
     end
-    @timeit_debug to "forward pass" forwardpass!(solver, ΔV, J)
+    @timeit_debug to "forward pass" fwp=forwardpass!(solver, ΔV, J)
+
+    updatex0f!(solver)
+    # moveforward!(solver, 0)
+    return fwp
 end
 
 """
@@ -161,11 +166,11 @@ function forwardpass!(solver::iLQRSolver, ΔV, J_prev)
         α /= 2.0
     end
 
-    if J > J_prev
-        # error("Error: Cost increased during Forward Pass")
-        solver.stats.status = COST_INCREASE
-        return NaN
-    end
+    # if J > J_prev
+    #     # error("Error: Cost increased during Forward Pass")
+    #     solver.stats.status = COST_INCREASE
+    #     return NaN
+    # end
 
     @logmsg InnerLoop :expected value=expected
     @logmsg InnerLoop :z value=z
