@@ -118,7 +118,7 @@ function forwardpass!(solver::iLQRSolver, ΔV, J_prev)
     z = -1.0
     expected = 0.0
     flag = true
-
+    
     while (z ≤ solver.opts.line_search_lower_bound || z > solver.opts.line_search_upper_bound) && J >= J_prev
 
         # Check that maximum number of line search decrements has not occured
@@ -165,12 +165,12 @@ function forwardpass!(solver::iLQRSolver, ΔV, J_prev)
         iter += 1
         α /= 2.0
     end
-
-    # if J > J_prev
-    #     # error("Error: Cost increased during Forward Pass")
-    #     solver.stats.status = COST_INCREASE
-    #     return NaN
-    # end
+    
+    if J > J_prev
+        # error("Error: Cost increased during Forward Pass")
+        solver.stats.status = COST_INCREASE
+        return NaN
+    end
 
     @logmsg InnerLoop :expected value=expected
     @logmsg InnerLoop :z value=z

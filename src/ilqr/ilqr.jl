@@ -83,7 +83,7 @@ Z̄ = copy(prob.Z)
 
 K = [zeros(T,m,n̄) for k = 1:N-1]
 d = [zeros(T,m)   for k = 1:N-1]
-B0 = prob.model.B0
+B0 = hasfield(typeof(prob.model),:B0) ? prob.model.B0 : zeros(Float64, n, 0)
 m0 = size(B0)[2]
 d0 = zeros(T,m0)
 
